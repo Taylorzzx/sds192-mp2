@@ -178,6 +178,7 @@ fec_dist <- function(data) {
     scale_y_continuous(label=c(0, 10000, 20000, 30000, 40000))+
     ylab("Votes")+
     xlab("Amount(US dollars)")
+    
 }
 ```
 
