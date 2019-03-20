@@ -2,9 +2,9 @@
 title: "Mini-Project 2"
 author: "Your Name Here"
 date: "2019-03-24"
-output: 
-  html_document:
-    code_folding: show
+output:
+ html_document:
+   code_folding: hide
 ---
 
 
@@ -20,5 +20,184 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
-taylor helena catherine
+
+```{r}
+contri <- contributions %>%
+  select(-state)
+```
+
+
+```{r}
+election <- house_elections %>%
+   mutate(Regions =  recode_factor(state,
+"AL" = "SE",
+"AK" = "W",
+"AZ" = "SW",
+"AR" = "SE",
+"CA" = "W",
+"CO" = "W",
+"CT" = "NE",
+"DE" = "NE",
+"FL" = "SE",
+"GA" = "SE",
+"HI" = "W",
+"ID" = "W",
+"IL" = "MW",
+"IN" = "MW",
+"IA" = "MW",
+"KS" = "MW",
+"KY" = "SE",
+"LA" = "SE",
+"ME" = "NE",
+"MD" = "NE",
+"MA" = "NE",
+"MI" = "MW",
+"MN"  = "MW",
+"MS" = "SE",
+"MO" = "MW",
+"MT" = "W",
+"NE" = "MW",
+"NV" = "W",
+"NH" = "NE",
+"NJ" = "NE",
+"NM" = "SW",
+"NY" = "NE",
+"NC" = "SE",
+"ND" = "MW",
+"OH" = "MW",
+"OK" = "SW",
+"OR" = "W",
+"PA" = "NE",
+"RI" = "NE",
+"SC" = "SE",
+"SD" = "MW",
+"TN" = "SE",
+"TX" = "SW",
+"UT" = "W",
+"VT" = "NE",
+"VA" = "SE",
+"WA" = "W",
+"WV" = "SE",
+"WI" = "MW",
+"WY" = "W",
+"DC" = "SE"))%>%
+  mutate(cand_id = fec_id)%>%
+  select(-fec_id)%>%
+  inner_join(contri, by = "cand_id")%>%
+  select(cand_id, candidate_name, state, Regions, party, transaction_amt, general_votes)%>%
+  group_by(state)%>%
+  mutate(n_cand = n_distinct(candidate_name))%>%
+  group_by(candidate_name)%>%
+  mutate(Amount = sum(transaction_amt))%>%
+  filter(Regions != "MP",Regions != "VI", Regions != "PW", Regions != "PR", Regions != "GU")%>%
+  filter(party != "I",party != "U",party != "W")
+```
+
+```{r}
+election2 <- house_elections %>%
+   mutate(Regions =  recode_factor(state,
+"AL" = "SE",
+"AK" = "W",
+"AZ" = "SW",
+"AR" = "SE",
+"CA" = "W",
+"CO" = "W",
+"CT" = "NE",
+"DE" = "NE",
+"FL" = "SE",
+"GA" = "SE",
+"HI" = "W",
+"ID" = "W",
+"IL" = "MW",
+"IN" = "MW",
+"IA" = "MW",
+"KS" = "MW",
+"KY" = "SE",
+"LA" = "SE",
+"ME" = "NE",
+"MD" = "NE",
+"MA" = "NE",
+"MI" = "MW",
+"MN"  = "MW",
+"MS" = "SE",
+"MO" = "MW",
+"MT" = "W",
+"NE" = "MW",
+"NV" = "W",
+"NH" = "NE",
+"NJ" = "NE",
+"NM" = "SW",
+"NY" = "NE",
+"NC" = "SE",
+"ND" = "MW",
+"OH" = "MW",
+"OK" = "SW",
+"OR" = "W",
+"PA" = "NE",
+"RI" = "NE",
+"SC" = "SE",
+"SD" = "MW",
+"TN" = "SE",
+"TX" = "SW",
+"UT" = "W",
+"VT" = "NE",
+"VA" = "SE",
+"WA" = "W",
+"WV" = "SE",
+"WI" = "MW",
+"WY" = "W",
+"DC" = "SE"))%>%
+  mutate(cand_id = fec_id)%>%
+  select(-fec_id)%>%
+  inner_join(contri, by = "cand_id")%>%
+  select(cand_id, candidate_name, state, Regions, party, transaction_amt, general_votes)%>%
+  filter(Regions != "MP",Regions != "VI", Regions != "PW", Regions != "PR", Regions != "GU")%>%
+  filter(party != "I",party != "U",party != "W")
+```
+
+
+
+```{r}
+Spent <- election %>%
+  filter(transaction_amt < 0)%>%
+  group_by(state)%>%
+  mutate(n_cand = n_distinct(candidate_name))%>%
+  group_by(candidate_name)%>%
+  mutate(Amount = sum(abs(transaction_amt)))
+``` 
+  
+
+```{r}
+fec_dist <- function(data) {
+  ggplot(data, aes(Amount, general_votes, color = Regions))+
+  xlim(0,50000)+
+  facet_wrap(~party)+
+  geom_jitter(aes(size = n_cand), alpha = 0.6)+
+  theme_minimal()+
+  scale_color_brewer(palette="Accent")+
+    scale_y_continuous(label=c(0, 10000, 20000, 30000, 40000))+
+    ylab("Votes")+
+    xlab("Amount(US dollars)")
+}
+```
+
+```{r}
+ggplot(data = election, aes(transaction_amt, general_votes, color = Regions))+
+  geom_point(aes(size = n_cand))+
+  facet_wrap(~party)+
+  geom_jitter()
+```
+  
+```{r}
+ggplot(data = Spent, aes(Amount, general_votes, color = Regions))+
+  geom_point(aes(size = n_cand), alpha = 0.6, shape = 1)+
+  facet_wrap(~party)+
+  geom_jitter()
+```
+
+```{r}
+fec_dist(Spent)
+```
+
+
 > Word count: `r wordcountaddin::word_count()`
